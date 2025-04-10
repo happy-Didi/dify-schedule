@@ -1,0 +1,25 @@
+name: Secure Dify API Access 2
+
+on:
+  schedule:
+    - cron: '15 8 * * *'
+
+jobs:
+  access-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Access Dify API
+        env:
+          API_URL: "http://1.95.41.98/v1"
+          API_KEY: ${{ secrets.DIFY_API_KEY }}  # 在仓库Settings > Secrets中配置
+        run: |
+          curl -X GET -s -o response.log -w "Status: %{http_code}\n" \
+            -H "Authorization: Bearer $API_KEY" \
+            "$API_URL"
+          
+          # 检查响应文件（如需处理返回数据）
+          if grep -q "error" response.log; then
+            echo "::error::API returned error content"
+            cat response.log
+            exit 1
+          fi
