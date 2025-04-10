@@ -1,20 +1,25 @@
-name: Daily URL Access
+name: Secure Dify API Access
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # UTC时间2:00（北京时间10:00）
-    # 如需设置时区（仅部分GitHub Actions版本支持）：
-    # timezone: Asia/Shanghai
+    - cron: '0 2 * * *'
 
 jobs:
-  access-url:
+  access-api:
     runs-on: ubuntu-latest
     steps:
-      - name: Access target URL
+      - name: Access Dify API
+        env:
+          API_URL: "http://1.95.41.98/v1"
+          API_KEY: ${{ secrets.DIFY_API_KEY }}  # 在仓库Settings > Secrets中配置
         run: |
-          # 使用curl访问URL并输出响应状态
-          response_code=$(curl -s -o /dev/null -w "%{http_code}" http://1.95.41.98/v1)
-          echo "HTTP Status Code: $response_code"
-          if [ "$response_code" -ne 200 ]; then
-            echo "::warning::URL access failed with status $response_code"
+          curl -X GET -s -o response.log -w "Status: %{http_code}\n" \
+            -H "Authorization: Bearer $API_KEY" \
+            "$API_URL"
+          
+          # 检查响应文件（如需处理返回数据）
+          if grep -q "error" response.log; then
+            echo "::error::API returned error content"
+            cat response.log
+            exit 1
           fi
