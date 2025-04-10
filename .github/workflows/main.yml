@@ -1,0 +1,20 @@
+name: Daily URL Access
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # UTC时间2:00（北京时间10:00）
+    # 如需设置时区（仅部分GitHub Actions版本支持）：
+    # timezone: Asia/Shanghai
+
+jobs:
+  access-url:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Access target URL
+        run: |
+          # 使用curl访问URL并输出响应状态
+          response_code=$(curl -s -o /dev/null -w "%{http_code}" http://1.95.41.98/v1)
+          echo "HTTP Status Code: $response_code"
+          if [ "$response_code" -ne 200 ]; then
+            echo "::warning::URL access failed with status $response_code"
+          fi
